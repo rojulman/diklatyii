@@ -22,10 +22,12 @@ class AbsenController extends Controller
 	$warning ='';
     if ($model->load(Yii::$app->request->post())) {
         if ($model->validate()) {
+			// cek apakah pin pegawai ada
             $pegawai = Pegawai::find()
 			->where(['pin'=>$model->pin])
 			->one();
-			if(!empty($pegawai)){
+			if(!empty($pegawai)){ // jika ada lanjutkan
+				// cek apakah pegawai hari ini sudah absen
 				$kehadiran = Kehadiran::find()
 				->where(['pin'=>$model->pin])
 				->andWhere(['tgl_masuk'=>$model->tanggal])
@@ -33,7 +35,7 @@ class AbsenController extends Controller
 				
 				//die(print_r($kehadiran));
 				
-				if(empty($kehadiran)){
+				if(empty($kehadiran)){ // jika belum absen
 					$kehadiran = new Kehadiran();
 					$kehadiran->pegawai_nip=$pegawai->nip;
 					$kehadiran->pin=$pegawai->pin;
@@ -42,10 +44,10 @@ class AbsenController extends Controller
 					$kehadiran->keterangan = $model->keterangan;
 					$kehadiran->save();
 					return $this->render('kehadiran',['model'=>$kehadiran]);
-				}else{
+				}else{// kasih sudah absen
 					$warning = 'Data absensi anda sudah tercatat!';
 				}
-			}else{
+			}else{// jika pin salah
 				$warning ='PIN Pegawai tidak ditemukan';
 			}	
 			
