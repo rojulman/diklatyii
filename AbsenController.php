@@ -71,10 +71,36 @@ public function actionPulang()
 
     if ($model->load(Yii::$app->request->post())) {
         if ($model->validate()) {
-            // form inputs are valid, do something here
-            return;
-        }
-    }
+            
+					// cek apakah pin pegawai ada
+            $pegawai = Pegawai::find()
+			->where(['pin'=>$model->pin])
+			->one();
+			if(!empty($pegawai)){ // jika ada lanjutkan
+				// cek apakah pegawai hari ini sudah absen
+				$kehadiran = Kehadiran::find()
+				->where(['pin'=>$model->pin])
+				->andWhere(['tgl_masuk'=>$model->tanggal])
+				->one();
+				
+				//die(print_r($kehadiran));
+				
+				if(!empty($kehadiran)){ // sudah absen masuk
+					$kehadiran->tgl_pulang =$model->tanggal;
+					$kehadiran->jam_pulang = $model->jam;
+					$kehadiran->keterangan = $model->keterangan;
+					$kehadiran->save();
+					return $this->render('kehadiran',['model'=>$kehadiran]);
+				}else{// kasih sudah absen
+					$warning = 'Hari Ini Belum Absen !';
+				}
+			}else{// jika pin salah
+				$warning ='PIN Pegawai tidak ditemukan';
+			}	
+			
+            return $this->render('pulang',['model'=>$model, 'warning'=>$warning]);
+        }	
+	}		
 
     return $this->render('pulang', [
         'model' => $model,
